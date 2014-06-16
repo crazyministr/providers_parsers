@@ -1,24 +1,30 @@
 # -*- coding: utf-8 -*-
-import xml.etree.ElementTree as ET
 from pprint import pprint
+import xml.etree.ElementTree as ET
 
-indent = '    '
 
-tree = ET.parse('bereg-price.xml')
-root = tree.getroot()
+def xml_parser(path_to_file):
+    tree = ET.parse(path_to_file)
+    root = tree.getroot()
+    for group in root.findall('group'):
+        print group.attrib['rus']  # type (мелованная бумага)
+        data = []
+        for papers in group.findall('papers'):
+            print papers.attrib['rus']  # name (Джи-принт)
+            materials = []  # all materials for current type
+            for paper in papers.findall('paper'):
+                fields = paper.find('fields')
+                m = {'name': papers.attrib['eng']}
+                for field in fields.findall('field'):
+                    if field.get('name') == 'format':
+                        m_format = field.text.split('*')
+                        m['width'] = m_format[0]
+                        m['height'] = m_format[1]
+                    if field.get('name') == 'pl':
+                        m['density'] = field.text
+                materials.append(m)
+            pprint(materials)
+            data.append(materials)
+        break
 
-for group in root.findall('group'):
-    print group.attrib['rus']
-    for papers in group.findall('papers'):
-        print indent, papers.attrib['rus']
-        for paper in papers.findall('paper'):
-            f = []
-            fields = paper.find('fields')
-            for field in fields.findall('field'):
-                f.append({
-                    'name': field.get('name'),
-                    'caption': field.get('caption'),
-                    'value': field.text
-                })
-            print indent * 2, f
-    break
+xml_parser('bereg-price.xml')
